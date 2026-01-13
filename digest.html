@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        /* Print-optimized styles for professional PDF output */
+        @page {
+            size: A4;
+            margin: 2.5cm 2cm;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            font-size: 11pt;
+            line-height: 1.6;
+            color: #2c3e50;
+            background: white;
+        }
+        
+        /* Cover Page */
+        .cover-page { color: white !important;
+            page-break-after: always;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            background: #667eea;
+            color: white;
+            padding: 2cm;
+        }
+        
+        .cover-page h1 {
+            font-size: 42pt;
+            font-weight: 700;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+        
+        .cover-page .subtitle {
+            font-size: 18pt;
+            font-weight: 300;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+        
+        .cover-page .date {
+            font-size: 14pt;
+            margin-top: 60px;
+            opacity: 0.8;
+        }
+        
+        .cover-page .metadata {
+            margin-top: 40px;
+            font-size: 12pt;
+            opacity: 0.8;
+        }
+        
+        /* Table of Contents */
+        .toc {
+            page-break-after: always;
+            padding: 40px 0;
+        }
+        
+        .toc h2 {
+            font-size: 24pt;
+            margin-bottom: 30px;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .toc-item {
+            margin: 15px 0;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .toc-item a {
+            text-decoration: none;
+            color: #2c3e50;
+            font-size: 12pt;
+        }
+        
+        /* Executive Summary */
+        .executive-summary {
+            page-break-after: always;
+            padding: 40px 0;
+        }
+        
+        .executive-summary h2 {
+            font-size: 24pt;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+        
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .stat-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            text-align: center;
+        }
+        
+        .stat-box .number {
+            font-size: 32pt;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-box .label {
+            font-size: 10pt;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        /* Paper Entry */
+        .paper {
+            page-break-before: always;
+            margin-bottom: 60px;
+        }
+        
+        .paper-header { color: white !important;
+            background: #667eea;
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .paper-title {
+            font-size: 20pt;
+            font-weight: 700;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+        
+        .paper-authors {
+            font-size: 11pt;
+            font-style: italic;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+        
+        .paper-meta {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        .meta-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 9pt;
+            font-weight: 600;
+        }
+        
+        /* Research Question Box */
+        .research-question {
+            background: #e8f4f8;
+            border-left: 5px solid #667eea;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 5px;
+        }
+        
+        .research-question h4 {
+            color: #667eea;
+            font-size: 12pt;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .research-question p {
+            font-size: 11pt;
+            line-height: 1.5;
+        }
+        
+        /* Section Headers */
+        .section {
+            margin: 30px 0;
+        }
+        
+        .section-header {
+            font-size: 16pt;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .subsection-header {
+            font-size: 13pt;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 20px 0 10px 0;
+        }
+        
+        /* Content Boxes */
+        .info-box {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .strength-box {
+            background: #e8f5e9;
+            border-left-color: #4caf50;
+        }
+        
+        .limitation-box {
+            background: #ffebee;
+            border-left-color: #f44336;
+        }
+        
+        .methodology-box {
+            background: #fff3e0;
+            border-left-color: #ff9800;
+        }
+        
+        /* Lists */
+        ul, ol {
+            margin: 15px 0 15px 30px;
+        }
+        
+        li {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+        
+        li strong {
+            color: #667eea;
+        }
+        
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 10pt;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        /* Visualization */
+        .visualization {
+            margin: 25px 0;
+            text-align: center;
+        }
+        
+        .visualization img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .visualization-caption {
+            font-size: 9pt;
+            color: #666;
+            font-style: italic;
+            margin-top: 10px;
+        }
+        
+        /* Key Findings */
+        .key-finding {
+            background: #fff9e6;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        
+        .key-finding strong {
+            color: #f57c00;
+        }
+        
+        /* Statistics Display */
+        .stat-highlight {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 10pt;
+            font-weight: 600;
+        }
+        
+        /* Synthesis Section */
+        .synthesis {
+            page-break-before: always;
+            background: #f0f4f8;
+            padding: 30px;
+            margin: 40px 0;
+            border-radius: 10px;
+        }
+        
+        .synthesis h2 {
+            color: #667eea;
+            font-size: 20pt;
+            margin-bottom: 20px;
+        }
+        
+        /* Footer */
+        .footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            font-size: 9pt;
+            color: #666;
+            text-align: center;
+        }
+        
+        /* Print optimizations */
+        @media print {
+            .paper {
+                page-break-inside: avoid;
+            }
+            
+            .section {
+                page-break-inside: avoid;
+            }
+            
+            a {
+                color: #2c3e50;
+                text-decoration: none;
+            }
+            
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Cover Page -->
+    <div class="cover-page">
+        <h1>{{ title }}</h1>
+        <div class="subtitle">Curated Research Insights from ACM Digital Library</div>
+        <div class="metadata">
+            <div>{{ paper_count }} Research Papers | Gaming & HCI Domain</div>
+            <div>Analysis Period: {{ date_range }}</div>
+        </div>
+        <div class="date">Generated: {{ date }}</div>
+    </div>
+
+    <!-- Table of Contents -->
+    <div class="toc">
+        <h2>Table of Contents</h2>
+        <div class="toc-item">
+            <a href="#executive-summary">Executive Summary</a>
+        </div>
+        {% for paper in papers %}
+        <div class="toc-item">
+            <a href="#paper-{{ loop.index }}">{{ loop.index }}. {{ paper.title }}</a>
+        </div>
+        {% endfor %}
+        <div class="toc-item">
+            <a href="#synthesis">Cross-Paper Synthesis & Research Gaps</a>
+        </div>
+    </div>
+
+    <!-- Executive Summary -->
+    <div class="executive-summary" id="executive-summary">
+        <h2>Executive Summary</h2>
+        
+        <div class="summary-stats">
+            <div class="stat-box">
+                <div class="number">{{ paper_count }}</div>
+                <div class="label">Papers Analyzed</div>
+            </div>
+            <div class="stat-box">
+                <div class="number">{{ total_participants }}</div>
+                <div class="label">Total Participants</div>
+            </div>
+            <div class="stat-box">
+                <div class="number">{{ avg_citations if avg_citations else "Data pending" }}</div>
+                <div class="label">Avg. Citations</div>
+            </div>
+        </div>
+        
+        <p>{{ executive_summary }}</p>
+        
+        <div class="info-box" style="margin-top: 30px;">
+            <h3 style="margin-bottom: 10px;">Key Themes</h3>
+            <ul>
+                {% for theme in key_themes %}
+                <li>{{ theme }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Individual Papers -->
+    {% for paper in papers %}
+    <div class="paper" id="paper-{{ loop.index }}">
+        <div class="paper-header">
+            <div class="paper-title">{{ paper.title }}</div>
+            <div class="paper-authors">{{ paper.authors }}</div>
+            <div class="paper-meta">
+                <span class="meta-badge">{{ paper.venue }}</span>
+                <span class="meta-badge">{{ paper.year }}</span>
+                <span class="meta-badge">DOI: {{ paper.doi }}</span>
+                {% if paper.citations %}
+                <span class="meta-badge">{{ paper.citations }} Citations</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Research Question -->
+        <div class="research-question">
+            <h4>Core Research Question</h4>
+            <p>{{ paper.research_question }}</p>
+        </div>
+
+        <!-- Research Motivation -->
+        <div class="section">
+            <h3 class="section-header">1. Research Motivation & Context</h3>
+            <p>{{ paper.motivation }}</p>
+            
+            <div class="info-box" style="margin-top: 20px;">
+                <h4 class="subsection-header">Significance to Field</h4>
+                <ul>
+                    {% for significance in paper.significance %}
+                    <li>{{ significance }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Methodology -->
+        <div class="section">
+            <h3 class="section-header">2. Methodology</h3>
+            
+            <div class="methodology-box">
+                <table>
+                    <tr>
+                        <th>Design</th>
+                        <td>{{ paper.methodology.design }}</td>
+                    </tr>
+                    <tr>
+                        <th>Sample Size</th>
+                        <td>{{ paper.methodology.sample_size }}</td>
+                    </tr>
+                    <tr>
+                        <th>Materials</th>
+                        <td>{{ paper.methodology.materials }}</td>
+                    </tr>
+                    <tr>
+                        <th>Analysis</th>
+                        <td>{{ paper.methodology.analysis }}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            {% if paper.methodology_diagram %}
+            <div class="visualization">
+                <img src="{{ paper.methodology_diagram }}" alt="Methodology Framework">
+                <div class="visualization-caption">Figure {{ loop.index }}.1: Methodological Framework</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Key Findings -->
+        <div class="section">
+            <h3 class="section-header">3. Key Findings</h3>
+            
+            {% for finding in paper.findings %}
+            <div class="key-finding">
+                <strong>Finding {{ loop.index }}:</strong> {{ finding.text }}
+                {% if finding.statistic %}
+                <span class="stat-highlight">{{ finding.statistic }}</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            {% if paper.results_visualization %}
+            <div class="visualization">
+                <img src="{{ paper.results_visualization }}" alt="Results Visualization">
+                <div class="visualization-caption">Figure {{ loop.index }}.2: Key Results</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Critical Evaluation -->
+        <div class="section">
+            <h3 class="section-header">4. Critical Evaluation</h3>
+            
+            <div class="strength-box">
+                <h4 class="subsection-header">Methodological Strengths</h4>
+                <ul>
+                    {% for strength in paper.strengths %}
+                    <li>{{ strength }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <div class="limitation-box" style="margin-top: 20px;">
+                <h4 class="subsection-header">Limitations & Validity Concerns</h4>
+                <ul>
+                    {% for limitation in paper.limitations %}
+                    <li>{{ limitation }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Implications -->
+        <div class="section">
+            <h3 class="section-header">5. Research Implications</h3>
+            
+            <h4 class="subsection-header">Theoretical Contributions</h4>
+            <p>{{ paper.theoretical_contribution }}</p>
+            
+            <h4 class="subsection-header">Practical Applications</h4>
+            <ul>
+                {% for application in paper.applications %}
+                <li>{{ application }}</li>
+                {% endfor %}
+            </ul>
+            
+            <h4 class="subsection-header">Future Research Directions</h4>
+            <ul>
+                {% for direction in paper.future_work %}
+                <li>{{ direction }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Connections -->
+        {% if paper.connections %}
+        <div class="section">
+            <h3 class="section-header">6. Connections to Other Work</h3>
+            <p>{{ paper.connections }}</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <!-- Synthesis Section -->
+    <div class="synthesis" id="synthesis">
+        <h2>Cross-Paper Synthesis & Research Gaps</h2>
+        
+        <div class="section">
+            <h3 class="subsection-header">Common Methodological Approaches</h3>
+            <p>{{ synthesis.methodology }}</p>
+        </div>
+        
+        <div class="section">
+            <h3 class="subsection-header">Converging Findings</h3>
+            <p>{{ synthesis.convergence }}</p>
+        </div>
+        
+        <div class="section">
+            <h3 class="subsection-header">Contradictions & Open Questions</h3>
+            <p>{{ synthesis.contradictions }}</p>
+        </div>
+        
+        <div class="section">
+            <h3 class="subsection-header">Identified Research Gaps</h3>
+            <ul>
+                {% for gap in synthesis.research_gaps %}
+                <li>{{ gap }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>This digest was automatically generated from ACM Digital Library</p>
+        <p>For questions or feedback, contact: [your contact]</p>
+        <p>Generated: {{ date }}</p>
+    </div>
+</body>
+</html>
