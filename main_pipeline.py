@@ -13,6 +13,7 @@ from typing import Dict, List
 # Import our enhanced modules
 from improved_summarize import summarize_all_papers
 from create_visualizations import generate_all_visualizations
+from visualize_professional import generate_all_visualizations
 from improved_render import render_digest
 from config import OPENAI_API_KEY
 
@@ -49,7 +50,7 @@ def fetch_papers_from_acm(query: str, max_results: int = 10, start_year: int = 2
             "authors": "Madison Klarkowski, Mickaël Causse, Alban Duprès, Natalia del Campo, Kellie Vella, Daniel Johnson",
             "abstract": "This study employs functional near-infrared spectroscopy (fNIRS) to measure cognitive workload during video game play. We conducted an experiment with 32 participants (age 18-35, M=24.3) playing a tower defense game at three difficulty levels. Results showed significant main effect of difficulty (F(2,62)=18.43, p<.001, η²=0.37) with prefrontal cortex oxygenation increasing linearly with game complexity. fNIRS measurements correlated strongly with NASA-TLX scores (r=0.73, p<.001) and inversely with performance (r=-0.58, p<.01). Expert gamers showed 23% lower cognitive load than novices at hard difficulty (t(30)=3.21, p=.003). Findings demonstrate fNIRS as a viable tool for objective gameplay assessment and inform adaptive difficulty design.",
             "doi": "10.1145/3549519",
-            "venue": "CHI PLAY 2022",
+            "venue": "CHI PLAY 2022 - Annual Symposium on Computer-Human Interaction in Play",
             "year": "2022",
             "citations": 47,
             "url": "https://dl.acm.org/doi/10.1145/3549519"
@@ -59,7 +60,7 @@ def fetch_papers_from_acm(query: str, max_results: int = 10, start_year: int = 2
             "authors": "Bastian Ilsø Hougaard, Hendrik Knoche",
             "abstract": "We introduce a Core Task Analysis Framework to systematically categorize gameplay mechanics focusing on aiming, pointing, and steering tasks. Through mixed-methods analysis of 45 games and player studies with 38 participants, we identified distinct interaction patterns across genres. Quantitative analysis revealed aiming tasks require 34% more cognitive resources than steering tasks (F(2,74)=12.8, p<.001). The framework demonstrates high inter-rater reliability (κ=0.82) and successfully predicted player performance in cross-validation studies (R²=0.68, p<.001). This framework aids researchers and developers in understanding cognitive and physical demands, enabling data-driven game design decisions.",
             "doi": "10.1145/3677057",
-            "venue": "ACM HCI 2024",
+            "venue": "ACM HCI 2024 - ACM Conference on Human Factors in Computing Systems",
             "year": "2024",
             "citations": 15,
             "url": "https://dl.acm.org/doi/10.1145/3677057"
@@ -69,7 +70,7 @@ def fetch_papers_from_acm(query: str, max_results: int = 10, start_year: int = 2
             "authors": "Riya Sogani, Ananay Gupta, Aaron Gabryluk, Viswak Raja",
             "abstract": "PopSignAI presents an innovative integration of sign language recognition within gameplay for interactive learning. The system uses real-time computer vision to recognize American Sign Language gestures during game interactions. User study with 24 deaf and hearing participants (age 12-45) showed significant improvement in sign vocabulary retention compared to traditional methods (t(23)=4.32, p<.001, d=0.88). Engagement scores increased 67% over baseline (M=4.2/5, SD=0.6). Machine learning model achieved 94% accuracy for 50 common signs. Participants completed 40% more learning sessions voluntarily compared to control group. System demonstrates potential for scalable, engaging sign language education.",
             "doi": "10.1145/3706599.3720321",
-            "venue": "CHI 2025",
+            "venue": "CHI 2025 - ACM CHI Conference on Human Factors in Computing Systems",
             "year": "2025",
             "citations": 3,
             "url": "https://dl.acm.org/doi/10.1145/3706599.3720321"
