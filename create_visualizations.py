@@ -29,59 +29,78 @@ def create_methodology_framework(paper: Dict, output_path: str):
     """
     Create a flowchart showing the methodology
     """
-    fig, ax = plt.subplots(figsize=(12, 8))
+    fig, ax = plt.subplots(figsize=(14, 10))  # Increased size
     ax.axis('off')
     
     methodology = paper.get('methodology', {})
     
     # Title
-    fig.suptitle(f"Methodological Framework\n{paper.get('title', '')[:80]}...", 
-                 fontsize=14, fontweight='bold', y=0.98)
+    title = paper.get('title', '')
+    if len(title) > 60:
+        title = title[:60] + '...'
+    fig.suptitle(f"Methodological Framework\n{title}", 
+                 fontsize=13, fontweight='bold', y=0.96)
     
-    # Define boxes
+    # Truncate long text
+    def truncate(text, max_len=40):
+        if len(text) > max_len:
+            return text[:max_len-3] + '...'
+        return text
+    
+    # Get methodology details
+    sample_size = methodology.get('sample_size', 'N=?')
+    design = truncate(methodology.get('design', 'Not specified'), 25)
+    materials = truncate(methodology.get('materials', 'Not specified'), 35)
+    analysis = truncate(methodology.get('analysis', 'Not specified'), 35)
+    
+    # Define boxes with better spacing
     boxes = [
-        {"text": f"Participants\n{methodology.get('sample_size', 'N=?')}", "pos": (0.2, 0.8), "color": COLORS['primary']},
-        {"text": f"Design\n{methodology.get('design', 'Not specified')}", "pos": (0.5, 0.8), "color": COLORS['secondary']},
-        {"text": f"Materials\n{methodology.get('materials', 'Not specified')[:50]}", "pos": (0.8, 0.8), "color": COLORS['accent']},
-        {"text": f"Data Collection", "pos": (0.35, 0.5), "color": COLORS['warning']},
-        {"text": f"Analysis\n{methodology.get('analysis', 'Not specified')[:50]}", "pos": (0.65, 0.5), "color": COLORS['success']},
-        {"text": "Results & Findings", "pos": (0.5, 0.2), "color": COLORS['danger']}
+        {"text": f"Participants\n{sample_size}", "pos": (0.15, 0.75), "color": COLORS['primary'], "width": 0.18},
+        {"text": f"Design\n{design}", "pos": (0.42, 0.75), "color": COLORS['secondary'], "width": 0.18},
+        {"text": f"Materials\n{materials}", "pos": (0.69, 0.75), "color": COLORS['accent'], "width": 0.18},
+        {"text": "Data Collection\nProcedure", "pos": (0.28, 0.50), "color": COLORS['warning'], "width": 0.20},
+        {"text": f"Analysis\n{analysis}", "pos": (0.58, 0.50), "color": COLORS['success'], "width": 0.20},
+        {"text": "Results &\nFindings", "pos": (0.43, 0.25), "color": COLORS['danger'], "width": 0.20}
     ]
     
-    # Draw boxes
+    # Draw boxes with adjusted sizes
     for box in boxes:
         fancy_box = FancyBboxPatch(
-            (box['pos'][0] - 0.1, box['pos'][1] - 0.05),
-            0.2, 0.1,
-            boxstyle="round,pad=0.01",
+            (box['pos'][0] - box['width']/2, box['pos'][1] - 0.06),
+            box['width'], 0.12,
+            boxstyle="round,pad=0.015",
             edgecolor=box['color'],
             facecolor=box['color'],
             alpha=0.3,
-            linewidth=2
+            linewidth=2.5
         )
         ax.add_patch(fancy_box)
+        
+        # Text inside box
         ax.text(box['pos'][0], box['pos'][1], box['text'],
                 ha='center', va='center', fontsize=9, fontweight='bold',
-                bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+                wrap=True)
     
-    # Draw arrows
+    # Draw arrows with better positioning
     arrows = [
-        ((0.2, 0.75), (0.35, 0.55)),
-        ((0.5, 0.75), (0.5, 0.55)),
-        ((0.8, 0.75), (0.65, 0.55)),
-        ((0.35, 0.45), (0.5, 0.25)),
-        ((0.65, 0.45), (0.5, 0.25))
+        ((0.15, 0.69), (0.28, 0.56)),   # Participants -> Data Collection
+        ((0.42, 0.69), (0.43, 0.56)),   # Design -> Analysis (adjusted)
+        ((0.69, 0.69), (0.58, 0.56)),   # Materials -> Analysis
+        ((0.33, 0.44), (0.43, 0.31)),   # Data Collection -> Results
+        ((0.63, 0.44), (0.53, 0.31))    # Analysis -> Results
     ]
     
     for start, end in arrows:
         ax.annotate('', xy=end, xytext=start,
-                   arrowprops=dict(arrowstyle='->', lw=2, color=COLORS['primary']))
+                   arrowprops=dict(arrowstyle='->', lw=2.5, color=COLORS['primary'], alpha=0.6))
     
     plt.tight_layout()
     plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
     plt.close()
+    
     print(f"✓ Created methodology diagram: {output_path}")
-
+    if os.path.exists(output_path):
+        print(f"  Size: {os.path.getsize(output_path) / 1024:.1f} KB")
 
 def create_results_comparison(paper: Dict, output_path: str):
     """
