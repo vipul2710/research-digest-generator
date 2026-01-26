@@ -31,9 +31,11 @@ def render_digest(data_file: str, template_file: str = "digest.html",
     PDFKIT_CONFIG = pdfkit.configuration(
         wkhtmltopdf=WKHTMLTOPDF_PATH)
     
-    # Add visualization paths to papers with file:// URLs for wkhtmltopdf
-    for paper in papers:
-        paper_id = paper.get('doi', '').replace('/', '_')
+# Add visualization paths to papers with file:// URLs for wkhtmltopdf
+    for i, paper in enumerate(papers, 1):  # ADD enumerate with index
+        # UNIQUE ID: index + DOI (matches visualization naming)
+        doi = paper.get('doi', f'paper_{i}')
+        paper_id = f"{i}_{doi.replace('/', '_').replace('.', '_')}"
         
         # Create absolute file:// URLs for images
         methodology_path = os.path.join(BASE_DIR, "visualizations", f"{paper_id}_methodology.png")
@@ -43,17 +45,11 @@ def render_digest(data_file: str, template_file: str = "digest.html",
         paper['methodology_diagram'] = Path(methodology_path).as_uri() if os.path.exists(methodology_path) else ""
         paper['results_visualization'] = Path(results_path).as_uri() if os.path.exists(results_path) else ""
         
-        # Debug: print paths
+        # Debug
         if os.path.exists(methodology_path):
-            print(f"✓ Found methodology diagram: {methodology_path}")
+            print(f"✓ Found methodology: paper {i}")
         else:
-            print(f"✗ Missing: {methodology_path}")
-            
-        if os.path.exists(results_path):
-            print(f"✓ Found results chart: {results_path}")
-        else:
-            print(f"✗ Missing: {results_path}")
-    
+            print(f"✗ Missing methodology: {methodology_path}")    
     # Calculate statistics
     stats = calculate_statistics(papers)
     

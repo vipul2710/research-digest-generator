@@ -411,8 +411,8 @@
                 <div class="label">Total Participants</div>
             </div>
             <div class="stat-box">
-                <div class="number">{{ avg_citations if avg_citations else "Data pending" }}</div>
-                <div class="label">Avg. Citations</div>
+                <div class="number">{{ date_range }}</div>
+                <div class="label">Publication Years</div>
             </div>
         </div>
         
@@ -438,9 +438,6 @@
                 <span class="meta-badge">{{ paper.venue }}</span>
                 <span class="meta-badge">{{ paper.year }}</span>
                 <span class="meta-badge">DOI: {{ paper.doi }}</span>
-                {% if paper.citations %}
-                <span class="meta-badge">{{ paper.citations }} Citations</span>
-                {% endif %}
             </div>
         </div>
 
@@ -605,7 +602,8 @@
 
     <!-- Footer -->
     <div class="footer">
-        <p>This digest was automatically generated from ACM Digital Library</p>
+        <p>This digest was automatically generated from ACM Digital Library RSS feeds</p>
+        <p><em>Note: Citation data not available via RSS. Visit paper DOI links for citation counts.</em></p>
         <p>For questions or feedback, contact: Priyanka Rathi</p>
         <p>Generated: {{ date }}</p>
     </div>

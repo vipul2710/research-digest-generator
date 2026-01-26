@@ -48,6 +48,37 @@ VIZ_COLORS = {
     'danger': '#f44336'
 }
 
+# Monthly digest settings
+DEFAULT_START_MONTH = None
+DEFAULT_END_MONTH = None
+
+# RSS feed settings
+MAX_PAPERS_PER_FEED = 15
+TOTAL_RESEARCH_DOMAINS = 10
+
+# Plotly visualization settings
+PLOTLY_CONFIG = {
+    'width': 1400,
+    'height': 900,
+    'dpi': 300,
+}
+
+# Plotly color scheme (professional publication quality)
+PLOTLY_COLORS = {
+    'primary': '#2E86AB',
+    'secondary': '#A23B72',
+    'accent': '#F18F01',
+    'success': '#06A77D',
+    'data': '#FFB627',
+    'process': '#6C757D',
+    'light_bg': '#F8F9FA',
+    'border': '#333333',
+    'p001': '#E63946',    # p<.001 - high significance
+    'p01': '#F4A261',     # p<.01 - moderate significance
+    'p05': '#2A9D8F',     # p<.05 - significance
+    'ns': '#ADB5BD',      # not significant
+}
+
 # Validate configuration
 def validate_config():
     """Validate that all required configuration is present"""

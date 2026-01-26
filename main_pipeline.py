@@ -1,21 +1,26 @@
 """
 Complete standalone pipeline for generating professor-level research digest
-No dependencies on old repo code - everything is self-contained
+RSS-powered - automatically fetches latest papers from ACM feeds
 """
 
 import os
 import sys
 import json
-import requests
+import logging
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Optional
+from paper_tracker import filter_new_papers, get_stats
 
 # Import our enhanced modules
 from improved_summarize import summarize_all_papers
-from create_visualizations import generate_all_visualizations
-from visualize_professional import generate_all_visualizations
+from plotly_visualizations import generate_all_visualizations
 from improved_render import render_digest
+from enhanced_rss_feeds import fetch_papers_from_all_feeds
 from config import OPENAI_API_KEY
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def ensure_directories():
@@ -26,91 +31,13 @@ def ensure_directories():
         print(f"✓ Directory ready: {directory}/")
 
 
-def fetch_papers_from_acm(query: str, max_results: int = 10, start_year: int = 2022) -> List[Dict]:
-    """
-    Fetch papers from ACM Digital Library using their public search
-    This is a simplified version that scrapes publicly available data
-    """
-    print(f"\nFetching papers from ACM Digital Library...")
-    print(f"Query: '{query}' | Max: {max_results} | Year: {start_year}+")
-    
-    # ACM Digital Library search endpoint
-    base_url = "https://dl.acm.org/action/doSearch"
-    
-    papers = []
-    
-    # This is a simplified scraper - in production you'd want to use ACM's official API
-    # For now, we'll create sample paper structure that you can populate manually
-    # or enhance with proper ACM API access
-    
-    # Sample papers structure (you can replace with actual API calls)
-    sample_papers = [
-        {
-            "title": "Using fNIRS to Assess Cognitive Activity During Gameplay",
-            "authors": "Madison Klarkowski, Mickaël Causse, Alban Duprès, Natalia del Campo, Kellie Vella, Daniel Johnson",
-            "abstract": "This study employs functional near-infrared spectroscopy (fNIRS) to measure cognitive workload during video game play. We conducted an experiment with 32 participants (age 18-35, M=24.3) playing a tower defense game at three difficulty levels. Results showed significant main effect of difficulty (F(2,62)=18.43, p<.001, η²=0.37) with prefrontal cortex oxygenation increasing linearly with game complexity. fNIRS measurements correlated strongly with NASA-TLX scores (r=0.73, p<.001) and inversely with performance (r=-0.58, p<.01). Expert gamers showed 23% lower cognitive load than novices at hard difficulty (t(30)=3.21, p=.003). Findings demonstrate fNIRS as a viable tool for objective gameplay assessment and inform adaptive difficulty design.",
-            "doi": "10.1145/3549519",
-            "venue": "CHI PLAY 2022 - Annual Symposium on Computer-Human Interaction in Play",
-            "year": "2022",
-            "citations": 47,
-            "url": "https://dl.acm.org/doi/10.1145/3549519"
-        },
-        {
-            "title": "Aiming, Pointing, Steering: A Core Task Analysis Framework for Gameplay",
-            "authors": "Bastian Ilsø Hougaard, Hendrik Knoche",
-            "abstract": "We introduce a Core Task Analysis Framework to systematically categorize gameplay mechanics focusing on aiming, pointing, and steering tasks. Through mixed-methods analysis of 45 games and player studies with 38 participants, we identified distinct interaction patterns across genres. Quantitative analysis revealed aiming tasks require 34% more cognitive resources than steering tasks (F(2,74)=12.8, p<.001). The framework demonstrates high inter-rater reliability (κ=0.82) and successfully predicted player performance in cross-validation studies (R²=0.68, p<.001). This framework aids researchers and developers in understanding cognitive and physical demands, enabling data-driven game design decisions.",
-            "doi": "10.1145/3677057",
-            "venue": "ACM HCI 2024 - ACM Conference on Human Factors in Computing Systems",
-            "year": "2024",
-            "citations": 15,
-            "url": "https://dl.acm.org/doi/10.1145/3677057"
-        },
-        {
-            "title": "PopSignAI: Integrating Sign Recognition into Gameplay to Teach Sign Language",
-            "authors": "Riya Sogani, Ananay Gupta, Aaron Gabryluk, Viswak Raja",
-            "abstract": "PopSignAI presents an innovative integration of sign language recognition within gameplay for interactive learning. The system uses real-time computer vision to recognize American Sign Language gestures during game interactions. User study with 24 deaf and hearing participants (age 12-45) showed significant improvement in sign vocabulary retention compared to traditional methods (t(23)=4.32, p<.001, d=0.88). Engagement scores increased 67% over baseline (M=4.2/5, SD=0.6). Machine learning model achieved 94% accuracy for 50 common signs. Participants completed 40% more learning sessions voluntarily compared to control group. System demonstrates potential for scalable, engaging sign language education.",
-            "doi": "10.1145/3706599.3720321",
-            "venue": "CHI 2025 - ACM CHI Conference on Human Factors in Computing Systems",
-            "year": "2025",
-            "citations": 3,
-            "url": "https://dl.acm.org/doi/10.1145/3706599.3720321"
-        },
-        {
-            "title": "Automatic Identification of Game Stuttering via Gameplay Videos Analysis",
-            "authors": "Emanuela Guglielmi, Gabriele Bavota, Rocco Oliveto, Simone Scalabrino",
-            "abstract": "This study presents a novel method for automatically detecting game stuttering through gameplay video analysis using deep learning. Convolutional neural network trained on 2,400 labeled gameplay videos achieved 91% precision and 88% recall in stutter detection. Analysis of frame timing revealed stutters correlated with 78% of user-reported performance issues. The model processes videos at 30fps in real-time, identifying micro-stutters (<50ms) that traditional frame rate metrics miss. Cross-validation across 15 game titles demonstrated generalizability (average F1=0.87). Approach enables proactive quality assurance, reducing post-launch performance complaints by estimated 45% in pilot studies.",
-            "doi": "10.1145/3695992",
-            "venue": "ACM TOSEM 2025",
-            "year": "2025",
-            "citations": 8,
-            "url": "https://dl.acm.org/doi/10.1145/3695992"
-        },
-        {
-            "title": "Player Engagement Dynamics in Multiplayer Online Battle Arena Games",
-            "authors": "Sarah Chen, Michael Rodriguez, Yuki Tanaka",
-            "abstract": "We investigated engagement patterns in MOBA games through longitudinal analysis of 156 players over 6 months (12,480 gameplay sessions). Mixed-effects modeling revealed skill progression significantly predicted sustained engagement (β=0.42, p<.001). Social factors accounted for 38% of variance in retention (R²=0.38, F(4,151)=23.4, p<.001). Players in coordinated teams showed 2.3x higher retention rates (HR=2.31, 95% CI [1.89, 2.82]). Chat sentiment analysis indicated positive team communication increased win probability by 18% (OR=1.18, p<.01). Peak engagement occurred at intermediate skill levels, suggesting importance of balanced matchmaking. Results inform retention strategies and game balance adjustments.",
-            "doi": "10.1145/3571234",
-            "venue": "CHI PLAY 2023",
-            "year": "2023",
-            "citations": 31,
-            "url": "https://dl.acm.org/doi/10.1145/3571234"
-        }
-    ]
-    
-    # Filter by year and limit results
-    filtered_papers = [p for p in sample_papers if int(p.get('year', 0)) >= start_year]
-    papers = filtered_papers[:max_results]
-    
-    print(f"✓ Retrieved {len(papers)} papers")
-    return papers
-
-
 def normalize_papers(raw_papers: List[Dict]) -> List[Dict]:
     """
     Normalize paper data to consistent format
     Extracts and structures all relevant fields
     """
     print("\nNormalizing paper data...")
+    logger.info(f"Normalizing {len(raw_papers)} papers")
     
     normalized = []
     for paper in raw_papers:
@@ -121,65 +48,117 @@ def normalize_papers(raw_papers: List[Dict]) -> List[Dict]:
             "doi": paper.get("doi", ""),
             "venue": paper.get("venue", "Unknown Venue"),
             "year": str(paper.get("year", "2024")),
+            "month": paper.get("month"),
+            "published_date": paper.get("published_date"),
             "citations": paper.get("citations", 0),
-            "url": paper.get("url", "")
+            "url": paper.get("url", ""),
+            "research_domain": paper.get("research_domain", "General")
         }
         normalized.append(normalized_paper)
+        logger.debug(f"Normalized paper: {normalized_paper['title'][:50]}...")
     
     print(f"✓ Normalized {len(normalized)} papers")
+    logger.info(f"Normalization complete: {len(normalized)} papers")
     return normalized
 
 
-def main(query: str = "Gameplay", max_papers: int = 10, start_year: int = 2022):
+def main(
+    max_papers: int = 20,
+    start_year: int = 2024,
+    start_month: Optional[int] = None,
+    end_year: Optional[int] = None,
+    end_month: Optional[int] = None
+):
     """
     Complete pipeline:
-    1. Fetch papers from ACM
+    1. Fetch papers from ACM RSS feeds (10 research domains, with date filtering)
     2. Normalize data
     3. Generate deep summaries
-    4. Create visualizations
+    4. Create visualizations (Plotly)
     5. Render PDF
+    
+    Args:
+        max_papers: Maximum number of papers to include in digest
+        start_year: Start year for filtering (required)
+        start_month: Start month (1-12, optional)
+        end_year: End year (optional)
+        end_month: End month (1-12, optional)
     """
+    
+    # Build date range string for logging
+    date_range_str = f"{start_year}"
+    if start_month:
+        date_range_str = f"{start_year}-{start_month:02d}"
+        if end_year or end_month:
+            end_display = f"{end_year or start_year}-{end_month:02d}" if end_month else f"{end_year}"
+            date_range_str += f" to {end_display}"
+    
+    logger.info(f"Starting pipeline: max_papers={max_papers}, date_range={date_range_str}")
     
     print("="*70)
     print("PROFESSOR-LEVEL RESEARCH DIGEST GENERATOR")
     print("="*70)
+    print(f"Date Range: {date_range_str}")
+    print(f"Max Papers: {max_papers}")
     print()
     
     # Ensure directories exist
     ensure_directories()
     
-    # Step 1: Fetch papers
+    # Step 1: Fetch papers from RSS (10 research domains)
     print(f"\n{'='*70}")
-    print(f"[1/5] FETCHING PAPERS FROM ACM")
+    print(f"[1/5] FETCHING PAPERS FROM 10 RESEARCH DOMAINS")
     print(f"{'='*70}")
     
     try:
-        raw_papers = fetch_papers_from_acm(
-            query=query,
-            max_results=max_papers,
-            start_year=start_year
+        # Fetch from all 10 domains with date filtering
+        raw_papers = fetch_papers_from_all_feeds(
+            max_per_feed=15,
+            start_year=start_year,
+            start_month=start_month,
+            end_year=end_year,
+            end_month=end_month
         )
+        logger.info(f"Fetched {len(raw_papers)} papers from all domains")
         
         if not raw_papers:
-            print("✗ No papers found. Try different query or year range.")
+            print(f"\n❌ No papers found for the specified date range.")
+            print(f"   Requested: {date_range_str}")
+            print(f"   Try adjusting --start-year, --start-month, --end-year, --end-month")
+            logger.warning(f"No papers found for date range: {date_range_str}")
             sys.exit(1)
         
-        with open('data/raw_papers.json', 'w', encoding='utf-8') as f:
-            json.dump(raw_papers, f, indent=2, ensure_ascii=False)
+        # Filter out previously processed papers
+        print(f"\n🔍 Filtering for NEW papers (checking against history)...")
+        new_papers = filter_new_papers(raw_papers)
         
-        print(f"✓ Saved raw papers to: data/raw_papers.json")
+        if not new_papers:
+            print("\n⚠️  No new papers found (all previously processed)")
+            stats = get_stats()
+            print(f"📊 Total papers in history: {stats['total_processed']}")
+            print(f"📅 By year: {stats['by_year']}")
+            sys.exit(0)
+        
+        # Limit to max_papers
+        papers_to_use = new_papers[:max_papers]
+        
+        with open('data/raw_papers.json', 'w', encoding='utf-8') as f:
+            json.dump(papers_to_use, f, indent=2, ensure_ascii=False)
+        
+        print(f"\n✅ Using {len(papers_to_use)} NEW papers for digest")
+        print(f"   (Skipped {len(raw_papers) - len(new_papers)} already processed)")
         
     except Exception as e:
-        print(f"✗ Error fetching papers: {e}")
-        sys.exit(1)
-    
+        print(f"✗ Error: {e}")
+        sys.exit(1)    
     # Step 2: Normalize data
     print(f"\n{'='*70}")
     print(f"[2/5] NORMALIZING DATA")
     print(f"{'='*70}")
     
     try:
-        normalized_papers = normalize_papers(raw_papers)
+        # Use papers_to_use (limited by max_papers), NOT raw_papers
+        normalized_papers = normalize_papers(papers_to_use)
         
         with open('data/normalized_papers.json', 'w', encoding='utf-8') as f:
             json.dump(normalized_papers, f, indent=2, ensure_ascii=False)
@@ -222,13 +201,16 @@ def main(query: str = "Gameplay", max_papers: int = 10, start_year: int = 2022):
         viz_paths = generate_all_visualizations('data/enhanced_papers.json')
         
         paper_count = len(enhanced_data['papers'])
-        print(f"\n✓ Generated {paper_count * 2} paper-specific visualizations")
-        print(f"✓ Generated 3 digest-wide visualizations")
+        print(f"\n✓ Generated {paper_count * 2} paper-specific visualizations (methodology + results)")
+        print(f"✓ Generated 2 digest-wide visualizations (domain distribution + timeline)")
+        print(f"✓ Both PNG and interactive HTML versions created")
         print(f"✓ Saved to: visualizations/")
+        logger.info(f"Visualizations complete: {paper_count * 2 + 2} total charts")
         
     except Exception as e:
         print(f"\n✗ Error creating visualizations: {e}")
-        print(f"💡 Make sure matplotlib and seaborn are installed")
+        print(f"💡 Make sure plotly and kaleido are installed: pip install plotly kaleido")
+        logger.error(f"Visualization error: {e}", exc_info=True)
         sys.exit(1)
     
     # Step 5: Render PDF
@@ -254,7 +236,7 @@ def main(query: str = "Gameplay", max_papers: int = 10, start_year: int = 2022):
             print(f"📄 Location: {pdf_path}")
             print(f"📊 Size: {file_size:.2f} MB")
             print(f"📚 Papers: {len(enhanced_data['papers'])}")
-            print(f"🎨 Visualizations: {paper_count * 2 + 3}")
+            print(f"🎨 Visualizations: {paper_count * 2 + 2} (PNG + HTML)")
             print(f"⏰ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             print(f"{'='*70}")
             
@@ -280,13 +262,21 @@ def generate_sample_digest():
     Faster and cheaper for initial testing
     """
     print("="*70)
-    print("GENERATING SAMPLE DIGEST (3 PAPERS)")
+    print("GENERATING SAMPLE DIGEST (3 PAPERS FROM 10 DOMAINS)")
     print("="*70)
+    logger.info("Starting sample digest generation")
     
     ensure_directories()
     
-    # Fetch and use only first 3 papers
-    papers = fetch_papers_from_acm("Gameplay", max_results=3, start_year=2022)
+    # Fetch and use only first 3 papers from all domains
+    papers = fetch_papers_from_all_feeds(
+        max_per_feed=2,  # Small number per feed for sample
+        start_year=2024,
+        start_month=None,
+        end_year=None,
+        end_month=None
+    )
+    papers = papers[:3]  # Limit to 3 papers
     normalized = normalize_papers(papers)
     
     # Save sample data
@@ -302,7 +292,7 @@ def generate_sample_digest():
     with open('data/enhanced_papers_sample.json', 'w', encoding='utf-8') as f:
         json.dump(enhanced_data, f, indent=2)
     
-    generate_all_visualizations('data/enhanced_papers_sample.json', 'visualizations')
+    generate_all_visualizations('data/enhanced_papers_sample.json')
     
     pdf_path = render_digest(
         'data/enhanced_papers_sample.json',
@@ -321,40 +311,73 @@ if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser(
-        description='Generate professor-level research digest from ACM papers',
+        description='Generate professor-level research digest from ACM RSS feeds (10 domains)',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   python main_pipeline.py --sample                    # Generate sample with 3 papers
-  python main_pipeline.py --max-papers 5              # Generate digest with 5 papers
-  python main_pipeline.py --query "VR Gaming"         # Custom search query
-  python main_pipeline.py --start-year 2023           # Papers from 2023 onwards
+  python main_pipeline.py --max-papers 20 --start-year 2024
+  
+  # Monthly filtering examples:
+  python main_pipeline.py --start-year 2024 --start-month 10
+  python main_pipeline.py --start-year 2024 --start-month 10 --end-month 10
+  python main_pipeline.py --start-year 2024 --start-month 10 --end-month 12
+  python main_pipeline.py --start-year 2024 --start-month 10 --end-year 2025 --end-month 1
+  
+NOTE: Papers are fetched from 10 research domains with date filtering!
         """
     )
     
     parser.add_argument('--sample', action='store_true', 
                        help='Generate sample digest with 3 papers (fast, cheap test)')
-    parser.add_argument('--query', type=str, default='Gameplay', 
-                       help='Search query for ACM (default: Gameplay)')
-    parser.add_argument('--max-papers', type=int, default=5, 
-                       help='Maximum number of papers (default: 5)')
-    parser.add_argument('--start-year', type=int, default=2022, 
-                       help='Start year for papers (default: 2022)')
+    parser.add_argument('--max-papers', type=int, default=20, 
+                       help='Maximum number of papers (default: 20)')
+    parser.add_argument('--start-year', type=int, default=2024, 
+                       help='Start year for papers (default: 2024)')
+    parser.add_argument('--start-month', type=int, choices=range(1, 13), metavar='MONTH',
+                       help='Start month (1-12, optional)')
+    parser.add_argument('--end-year', type=int,
+                       help='End year (optional)')
+    parser.add_argument('--end-month', type=int, choices=range(1, 13), metavar='MONTH',
+                       help='End month (1-12, optional)')
     
     args = parser.parse_args()
+    
+    # Validation
+    if args.end_month and not args.end_year:
+        print("❌ Error: --end-month requires --end-year")
+        logger.error("Invalid args: --end-month without --end-year")
+        sys.exit(1)
+    
+    if args.end_year and args.end_year < args.start_year:
+        print("❌ Error: end-year must be >= start-year")
+        logger.error(f"Invalid args: end-year {args.end_year} < start-year {args.start_year}")
+        sys.exit(1)
+    
+    if args.start_month and args.end_month and not args.end_year:
+        # Same year, different months
+        if args.end_month < args.start_month:
+            print("❌ Error: end-month must be >= start-month within same year")
+            logger.error(f"Invalid args: end-month {args.end_month} < start-month {args.start_month}")
+            sys.exit(1)
     
     # Check if OpenAI API key is set
     if not OPENAI_API_KEY:
         print("✗ Error: OPENAI_API_KEY not found in environment")
         print("💡 Create a .env file with: OPENAI_API_KEY=your-key-here")
+        logger.error("Missing OPENAI_API_KEY")
         sys.exit(1)
+    
+    logger.info(f"Arguments: {args}")
     
     # Run sample or full pipeline
     if args.sample:
         generate_sample_digest()
     else:
         main(
-            query=args.query,
             max_papers=args.max_papers,
-            start_year=args.start_year
+            start_year=args.start_year,
+            start_month=args.start_month,
+            end_year=args.end_year,
+            end_month=args.end_month
         )

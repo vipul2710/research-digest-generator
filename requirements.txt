@@ -8,13 +8,24 @@ pdfkit>=1.0.0
 # Template rendering
 jinja2>=3.1.0
 
-# Visualization
+# Visualization - Matplotlib (legacy, kept for compatibility)
 matplotlib>=3.7.0
 seaborn>=0.12.0
 numpy>=1.24.0
+
+# NEW: Plotly for better visualizations (proper emoji rendering)
+plotly>=5.18.0
+kaleido>=0.2.1
 
 # HTTP requests (for ACM API)
 requests>=2.31.0
 
 # Optional: Better formatting
 Pillow>=10.0.0
+
+# RSS feed parsing
+feedparser>=6.0.0
+pyyaml>=6.0.0
+
+# NEW: Date parsing for monthly filtering
+python-dateutil>=2.8.0
