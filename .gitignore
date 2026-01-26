@@ -39,6 +39,7 @@ data/*.csv
 visualizations/*.png
 visualizations/*.jpg
 visualizations/*.svg
+visualizations/*.html
 
 # Output PDFs and HTML
 output/*.pdf
